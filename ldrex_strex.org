@@ -8,7 +8,7 @@ bus masters wont be locked out from the memory access unless they are accessing 
 
 * e.g.
 #+BEGIN_SRC asm
-LOCKED EQU 0           ; define value indicating
+LOCKED EQU 0           ; define value indicating "locked"
 
  LDR     r12, <addr>   ; preload semaphore address
  LDR     r1, =LOCKED   ; preload "locked" value
