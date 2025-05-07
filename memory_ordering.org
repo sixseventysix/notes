@@ -1,0 +1,99 @@
+#+TITLE: Memory Ordering
+#comparch
+
+* introduction
+compiler makes optimizations by doign out of order processing (so all data lines are packed)
+if data is independant from each other, we can do out-of-order loading/storing
+safe for single threaded programs as memory isnt shared so mixing up instruction orderign doesn't cause undefined behaviour
+unsafe for multi-threaded programs as out-of-order execution can cause incosistent data reads/writes
+memory ordering informs the compiler in what sequence can we do memory accesses for shared memory
+
+
+memory ordering is about how one thread guarantees the visibility and ordering of its memory accesses to other threads.
+
+* types
+1. SeqCst (Sequentially Consistent)
+2. AcqRel (Acquire Release)
+3. Relaxed
+
+* AcqRel
+** Acquire
+used when loading data into shared variables
+can't do out-of-order exec for instructions after acquire instruction
+memory accesses after an acquire cannot be re-ordered to before the acquire instrcution
+
+
+mem_access1
+----------- acquire
+mem_access2
+
+mem_access1 can be re-ordered to after the acquire
+mem_access2 cannot be re-ordered to before the acquire
+
+** Release
+used when storing data into shared variables
+
+mem_access1
+----------- release
+mem_access2
+
+mem_access1 cannot be re-ordered to after the release
+mem_access2 can be re-ordered to before the release
+
+** SeqCst
+no re-ordering allowed at all.
+those before the SeqCst stay before and those after, stay after
+acts like a memory fence
+
+** Relaxed
+can re-order as you wish
+potentially dangerous, only to be used when memory accesses truly do not depend on each other
+
+* special ops
+** exchange
+#+BEGIN_SRC cpp
+T atomic<T>::exchange(T desired) {
+  T old = this->val;
+  this->val = desired;
+  return old;
+}
+#+END_SRC
+
+** compare_exchange_*
+#+BEGIN_SRC cpp
+bool atomic<T>::compare_exchange_*(T &expected, T desired) {
+  if(this->val == expected) {
+    this->val = desired;
+    return true;
+  }
+  expected = this->val;
+  return false;
+}
+#+END_SRC
+
+the ~*~ could mean either weak or strong
+
+*** _weak
+used when writing a compare-and-swap (CAS) loop
+allows for spurious failures
+a spurious failure is when an atomic operation like compare_exchange_weak fails even though the expected and actual values are equal — i.e., the operation could have succeeded, but it didn’t, due to hardware or architectural reasons.
+the failure might occur for performance reasons. if the hardware thinks the values have been modified between the load and store, the cmp_xchng will fail even if the actual value might not have changed.
+refer: [[file:ldrex_strex.org::*cases]]
+
+#+BEGIN_SRC cpp
+while(!atomic_var.compare_exchange_weak(expected, new_val)) {
+
+}
+#+END_SRC
+
+*** _strong
+used when you don't expect spurious failures and want to write a one-shot CAS
+
+* difference between SeqCst and AcqRel
+** SeqCst
+adds a global order across all SeqCst operations
+all threads see the operations in same order
+
+** Acq & Rel
+only cares about its reader/writer threads
+only affects synchronization bw specific threads that have the acq-rel pairs
