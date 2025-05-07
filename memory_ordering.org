@@ -22,23 +22,26 @@ used when loading data into shared variables
 can't do out-of-order exec for instructions after acquire instruction
 memory accesses after an acquire cannot be re-ordered to before the acquire instrcution
 
-
+#+BEGIN_SRC text
 mem_access1
 ----------- acquire
 mem_access2
+#+END_SRC
 
-mem_access1 can be re-ordered to after the acquire
-mem_access2 cannot be re-ordered to before the acquire
+~mem_access1~ can be re-ordered to after the acquire
+~mem_access2~ cannot be re-ordered to before the acquire
 
 ** Release
 used when storing data into shared variables
 
+#+BEGIN_SRC text
 mem_access1
 ----------- release
 mem_access2
+#+END_SRC
 
-mem_access1 cannot be re-ordered to after the release
-mem_access2 can be re-ordered to before the release
+~mem_access1~ cannot be re-ordered to after the release
+~mem_access2~ can be re-ordered to before the release
 
 ** SeqCst
 no re-ordering allowed at all.
